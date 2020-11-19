@@ -672,12 +672,15 @@ begin
       begin
          l_age_to = t_json_text :: json ->> 'age_to';
 
-         if l_age_to = 'NULL'
+         if l_age_to = '-1'
          then
             l_age_to = null;
          elsif not ((l_age_to)::int >=0 and (l_age_to)::int <=200)
          then
-            raise exception '(l_age_to)::int >=0 and (l_age_to)::int <=200';
+            raise exception 'age_to >= 0 and age_to <= 200';
+         elsif l_age_to < l_mod_vacancy_main.age_from
+         then
+            raise exception 'age_from < age_to';
          end if;
 
          l_mod_vacancy_main.age_to = coalesce(l_age_to, l_mod_vacancy_main.age_to::text);
