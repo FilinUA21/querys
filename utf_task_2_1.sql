@@ -229,13 +229,15 @@ begin
       begin
          l_gender = t_json_text :: json ->> 'gender';
         
-         if l_gender = 'NULL'
+         if length(l_gender) = 0 then
+            raise exception 'null';
+         elsif l_gender = 'NULL'
          then
             l_gender = null;
          elsif not ((l_gender)::text = ANY ((ARRAY[
-                                                             '0'::character varying
-                                                           , '1'::character varying
-                                                           ])::text[]))
+                                                    '0'::character varying
+                                                  , '1'::character varying
+                                                  ])::text[]))
          then
             raise exception '0|1';
          end if;
