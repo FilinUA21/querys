@@ -999,10 +999,10 @@ begin
                 no_criminal_record     = l_mod_vacancy_main.no_criminal_record,
                 additional_requirement = l_mod_vacancy_main.additional_requirement	                
           where vacancy_uuid = vacancy_uuid_u
-            and (position, work_schedule, wages_from, wages_to, address_uuid, work_permissions, wages_type,
-                 operating_mode,
-                 requirements_candidate, job_responsibilities, timestamp_urgency
-                 , accommodations, nutrition
+            and (position, work_schedule, wages_from, wages_to, address_uuid, work_permissions
+                 , wages_type, operating_mode, requirements_candidate, job_responsibilities, timestamp_urgency
+                 , accommodations
+                 , nutrition
                  , coordinates_uuid
                  , nationality
                  , work_experience
@@ -1019,9 +1019,8 @@ begin
                  , no_criminal_record
                  , additional_requirement                 
                  ) is distinct from
-                (position_v, work_schedule_key_v, wages_from_b, wages_to_b, address_uuid_u, work_permissions_b,
-                 wages_type_v,
-                 operating_mode_t, requirements_candidate_t, job_responsibilities_t, timestamp_urgency_t
+                (position_v, work_schedule_key_v, wages_from_b, wages_to_b, address_uuid_u, work_permissions_b
+                 , wages_type_v, operating_mode_t, requirements_candidate_t, job_responsibilities_t, timestamp_urgency_t
                  , l_mod_vacancy_main.accommodations
                  , l_mod_vacancy_main.nutrition
                  , l_mod_vacancy_main.coordinates_uuid
