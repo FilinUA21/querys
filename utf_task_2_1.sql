@@ -700,7 +700,7 @@ begin
          if length(l_russian_language_level) = 0
          then
             raise exception 'null';
-                  elsif not ((l_russian_language_level)::text = ANY ((ARRAY[
+         elsif not ((l_russian_language_level)::text = ANY ((ARRAY[
                                                          'Не знаю'::character varying
                                                        , 'Говорю'::character varying
                                                        , 'Читаю'::character varying
@@ -711,7 +711,7 @@ begin
                                                        , 'Говорю, Читаю, Пишу'::character varying
                                                        ])::text[]))
          then
-            raise exception 'l_russian_language_level_check';
+            raise exception 'Не знаю|Говорю|Читаю|Пишу|Говорю, Читаю|Говорю, Пишу|Читаю, Пишу|Говорю, Читаю, Пишу';
          end if;
 
          l_mod_vacancy_main.russian_language_level = coalesce(l_russian_language_level, l_mod_vacancy_main.russian_language_level::text);
