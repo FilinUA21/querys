@@ -221,42 +221,6 @@ begin
       end if;
       work_permissions_b = work_permissions_t;
      
-     
-      --получаем параметр gender из json
-      -- mav - парсим JSON work_experience
-      declare
-         l_gender text;
-      begin
-         l_gender = t_json_text :: json ->> 'gender';
-        
-         if length(l_gender) = 0 then
-            raise exception 'null';
-         elsif l_gender = 'NULL'
-         then
-            l_gender = null;
-         elsif not ((l_gender)::text = ANY ((ARRAY[
-                                                    '0'::character varying
-                                                  , '1'::character varying
-                                                  ])::text[]))
-         then
-            raise exception '0|1';
-         end if;
-
-         l_mod_vacancy_main.gender = coalesce(l_gender, l_mod_vacancy_main.gender::text);
-
-         if l_mod_vacancy_main.gender is null 
-         then
-            l_hint = concat_ws(',', l_hint, 'gender');
-         end if;
-
-      exception
-         when others
-            then
-               return '{"f_result":"' || 'ERROR mod_update_vacancy_main gender : ' || SQLERRM || '"}';
-      end;    
-     
-      
-
       --получаем параметр operating_mode из json
       operating_mode_t = t_json_text :: json ->> 'operating_mode';
       operating_mode_t = coalesce( operating_mode_t, '' );
@@ -638,7 +602,40 @@ begin
             then
                return '{"f_result":"' || 'ERROR mod_update_vacancy_main order_payment_advance : ' || SQLERRM || '"}';
       end;      
-     
+
+           --получаем параметр gender из json
+      -- mav - парсим JSON work_experience
+      declare
+         l_gender text;
+      begin
+         l_gender = t_json_text :: json ->> 'gender';
+
+         if length(l_gender) = 0 then
+            raise exception 'null';
+         elsif l_gender = 'NULL'
+         then
+            l_gender = null;
+         elsif not ((l_gender)::text = ANY ((ARRAY[
+                                                    '0'::character varying
+                                                  , '1'::character varying
+                                                  ])::text[]))
+         then
+            raise exception '0|1';
+         end if;
+
+         l_mod_vacancy_main.gender = coalesce(l_gender, l_mod_vacancy_main.gender::text);
+
+         if l_mod_vacancy_main.gender is null
+         then
+            l_hint = concat_ws(',', l_hint, 'gender');
+         end if;
+
+      exception
+         when others
+            then
+               return '{"f_result":"' || 'ERROR mod_update_vacancy_main gender : ' || SQLERRM || '"}';
+      end;
+
       -- mav - парсим JSON age_from
       declare
          l_age_from text;
