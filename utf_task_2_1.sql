@@ -678,9 +678,6 @@ begin
          elsif not ((l_age_to)::int >=0 and (l_age_to)::int <=200)
          then
             raise exception 'age_to >= 0 and age_to <= 200';
-         elsif l_age_to < l_mod_vacancy_main.age_from
-         then
-            raise exception 'age_from < age_to';
          end if;
 
          l_mod_vacancy_main.age_to = coalesce(l_age_to, l_mod_vacancy_main.age_to::text);
@@ -688,6 +685,9 @@ begin
          if l_mod_vacancy_main.age_to is null 
          then
             l_hint = concat_ws(',', l_hint, 'age_to');
+         elsif l_mod_vacancy_main.age_to < l_mod_vacancy_main.age_from
+         then
+            raise exception 'age_from < age_to';
          end if;
 
       exception
