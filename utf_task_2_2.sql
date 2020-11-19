@@ -16,10 +16,8 @@ begin
       l_mod_vacancy_main               public.mod_vacancy_main;
       l_position_length                int;
       l_hint                           text;
-      l_mod_address                    public.mod_address;
       l_row_number_from                int;
       l_row_number_to                  int;
-      l_ref_mod_vacancy_work_schedule  public.ref_mod_vacancy_work_schedule;
    begin
 
       -- mav - парсим JSON login_uuid
@@ -113,219 +111,6 @@ begin
                return '{"f_result":"' || 'ERROR fn_mod_get_vacancy_list_with_filter position : ' || SQLERRM || '"}';
       end;
 
-      -- mav - парсим JSON work_permissions
-      declare
-         l_work_permissions        text;
-      begin
-         l_work_permissions = json_text_i :: json ->> 'work_permissions';
-
-         if coalesce(l_work_permissions,'') = ''
-         then
-            l_mod_vacancy_main.work_permissions = null;
-            l_hint = concat_ws(',', l_hint,'work_permissions');
-         else
-            l_mod_vacancy_main.work_permissions = l_work_permissions;
-         end if;
-      exception
-         when others
-            then
-               return '{"f_result":"' || 'ERROR fn_mod_get_vacancy_list_with_filter work_permissions : ' || SQLERRM || '"}';
-      end;
-
-      -- mav - парсим JSON vacancy_type
-      declare
-         l_vacancy_type        text;
-      begin
-         l_vacancy_type = json_text_i :: json ->> 'vacancy_type';
-
-         if coalesce(l_vacancy_type,'') = ''
-         then
-            l_ref_mod_vacancy_work_schedule.vcnc_type = null;
-            l_hint = concat_ws(',', l_hint,'vacancy_type');
-         elseif not ((l_vacancy_type)::text = ANY ((ARRAY[
-                                                            'vcnc_tp_permanent'::character varying
-                                                          , 'vcnc_tp_temporary'::character varying
-                                                          ])::text[]))
-         then
-            raise exception 'vcnc_tp_permanent|vcnc_tp_temporary';
-         else
-            l_ref_mod_vacancy_work_schedule.vcnc_type = l_vacancy_type;
-         end if;
-
-      exception
-         when others
-            then
-               return '{"f_result":"' || 'ERROR fn_mod_get_vacancy_list_with_filter vacancy_type : ' || SQLERRM || '"}';
-      end;
-
-      -- mav - парсим JSON work_schedule
-      declare
-         l_work_schedule        text;
-      begin
-         l_work_schedule = json_text_i :: json ->> 'work_schedule';
-
-         if coalesce(l_work_schedule,'') = ''
-         then
-            l_mod_vacancy_main.work_schedule = null;
-            l_hint = concat_ws(',', l_hint,'work_schedule');
-         elseif not ((l_work_schedule)::text = ANY ((ARRAY[
-                                                            'work_schedule_shift_method'::character varying
-                                                          , 'work_schedule_underworking'::character varying
-                                                          , 'work_schedule_shift_schedule'::character varying
-                                                          , 'work_schedule_full_time'::character varying
-                                                          ])::text[]))
-         then
-            raise exception 'work_schedule_shift_method|work_schedule_underworking|work_schedule_shift_schedule|work_schedule_full_time';
-         else
-            l_mod_vacancy_main.work_schedule = l_work_schedule;
-         end if;
-
-      exception
-         when others
-            then
-               return '{"f_result":"' || 'ERROR fn_mod_get_vacancy_list_with_filter work_schedule : ' || SQLERRM || '"}';
-      end;
-
-      -- mav - парсим JSON wages
-      declare
-         l_wages       text;
-      begin
-         l_wages = json_text_i :: json ->> 'wages';
-
-         if coalesce(l_wages,'') = ''
-         then
-            l_mod_vacancy_main.wages_from = null;
-            l_hint = concat_ws(',', l_hint,'wages');
-         else
-            l_mod_vacancy_main.wages_from = l_wages;
-         end if;
-
-      exception
-         when others
-            then
-               return '{"f_result":"' || 'ERROR fn_mod_get_vacancy_list_with_filter wages : ' || SQLERRM || '"}';
-      end;
-
-      -- mav - парсим JSON wages_type
-      declare
-         l_wages_type       text;
-      begin
-         l_wages_type = json_text_i :: json ->> 'wages_type';
-
-         if coalesce(l_wages_type,'') = ''
-         then
-            l_mod_vacancy_main.wages_type = null;
-            l_hint = concat_ws(',', l_hint,'wages_type');
-         elseif not ((l_wages_type)::text = ANY ((ARRAY[
-                                                            'rmvt_month'::character varying
-                                                          , 'rmvt_day'::character varying
-                                                          , 'rmvt_hour'::character varying
-                                                          , 'rmvt_by_agreement'::character varying
-                                                          ])::text[]))
-         then
-            raise exception 'rmvt_month|rmvt_day|rmvt_hour|rmvt_by_agreement';
-         else
-            l_mod_vacancy_main.wages_type = l_wages_type;
-         end if;
-
-      exception
-         when others
-            then
-               return '{"f_result":"' || 'ERROR fn_mod_get_vacancy_list_with_filter wages_type : ' || SQLERRM || '"}';
-      end;
-
-      -- mav - парсим JSON accommodations
-      declare
-         l_accommodations        text;
-      begin
-         l_accommodations = json_text_i :: json ->> 'accommodations';
-
-         if coalesce(l_accommodations,'') = ''
-         then
-            l_mod_vacancy_main.accommodations = null;
-            l_hint = concat_ws(',', l_hint,'accommodations');
-         elseif not ((l_accommodations)::text = ANY ((ARRAY[
-                                                            'rma_hostel'::character varying
-                                                          , 'rma_free_accommodation'::character varying
-                                                          , 'rma_accommodation_not_provided'::character varying
-                                                          ])::text[]))
-         then
-            raise exception 'rma_hostel|rma_free_accommodation|rma_accommodation_not_provided';
-         else
-            l_mod_vacancy_main.accommodations = l_accommodations;
-         end if;
-
-      exception
-         when others
-            then
-               return '{"f_result":"' || 'ERROR fn_mod_get_vacancy_list_with_filter accommodations : ' || SQLERRM || '"}';
-      end;
-
-      -- mav - парсим JSON nutrition
-      declare
-         l_nutrition        text;
-      begin
-         l_nutrition = json_text_i :: json ->> 'nutrition';
-
-         if coalesce(l_nutrition,'') = ''
-         then
-            l_mod_vacancy_main.nutrition = null;
-            l_hint = concat_ws(',', l_hint,'nutrition');
-         elseif not ((l_nutrition)::text = ANY ((ARRAY[
-                                                            'rmf_preferential_price'::character varying
-                                                          , 'rmf_free_food'::character varying
-                                                          , 'rmf_nutrition_not_provided'::character varying
-                                                          ])::text[]))
-         then
-            raise exception 'rmf_preferential_price|rmf_free_food|rmf_nutrition_not_provided';
-         else
-            l_mod_vacancy_main.nutrition = l_nutrition;
-         end if;
-
-      exception
-         when others
-            then
-               return '{"f_result":"' || 'ERROR fn_mod_get_vacancy_list_with_filter nutrition : ' || SQLERRM || '"}';
-      end;
-
-      -- mav - парсим JSON region
-      declare
-         l_region        text;
-      begin
-         l_region = json_text_i :: json ->> 'region';
-
-         if coalesce(l_region,'') = ''
-         then
-            l_mod_address.region = null;
-            l_hint = concat_ws(',', l_hint,'region');
-         else
-            l_mod_address.region = l_region;
-         end if;
-      exception
-         when others
-            then
-               return '{"f_result":"' || 'ERROR fn_mod_get_vacancy_list_with_filter region : ' || SQLERRM || '"}';
-      end;
-
-      -- mav - парсим JSON city
-      declare
-         l_city        text;
-      begin
-         l_city = json_text_i :: json ->> 'city';
-
-         if coalesce(l_city,'') = ''
-         then
-            l_mod_address.city = null;
-            l_hint = concat_ws(',', l_hint,'city');
-         else
-            l_mod_address.city = l_city;
-         end if;
-      exception
-         when others
-            then
-               return '{"f_result":"' || 'ERROR fn_mod_get_vacancy_list_with_filter city : ' || SQLERRM || '"}';
-      end;
-
       -- mav - парсим JSON row_number_from
       begin
          l_row_number_from = json_text_i :: json ->> 'row_number_from';
@@ -364,210 +149,6 @@ begin
             then
                return '{"f_result":"' || 'ERROR fn_mod_get_vacancy_list_with_filter row_number_to : ' || SQLERRM || '"}';
       end;
-     
-      -- mav - парсим JSON gender
-      declare
-         l_gender        text;
-      begin
-         l_gender = json_text_i :: json ->> 'gender';
-
-         if coalesce(l_gender,'') = ''
-         then
-            l_mod_vacancy_main.gender = null;
-            l_hint = concat_ws(',', l_hint,'gender');
-         else
-            l_mod_vacancy_main.gender = l_gender;
-         end if;
-      exception
-         when others
-            then
-               return '{"f_result":"' || 'ERROR fn_mobile_get_vacancy_list_with_filter gender : ' || SQLERRM || '"}';
-      end;  
-     
-      -- mav - парсим JSON is_legal_employment
-      declare
-         l_is_legal_employment        text;
-      begin
-         l_is_legal_employment = json_text_i :: json ->> 'is_legal_employment';
-
-         if coalesce(l_is_legal_employment,'') = ''
-         then
-            l_mod_vacancy_main.is_legal_employment = null;
-            l_hint = concat_ws(',', l_hint,'is_legal_employment');
-         else
-            l_mod_vacancy_main.is_legal_employment = l_is_legal_employment;
-         end if;
-      exception
-         when others
-            then
-               return '{"f_result":"' || 'ERROR fn_mobile_get_vacancy_list_with_filter is_legal_employment : ' || SQLERRM || '"}';
-      end;  
-     
-      -- mav - парсим JSON work_clothes
-      declare
-         l_work_clothes        text;
-      begin
-         l_work_clothes = json_text_i :: json ->> 'work_clothes';
-
-         if coalesce(l_work_clothes,'') = ''
-         then
-            l_mod_vacancy_main.work_clothes = null;
-            l_hint = concat_ws(',', l_hint,'work_clothes');
-         else
-            l_mod_vacancy_main.work_clothes = l_work_clothes;
-         end if;
-      exception
-         when others
-            then
-               return '{"f_result":"' || 'ERROR fn_mobile_get_vacancy_list_with_filter work_clothes : ' || SQLERRM || '"}';
-      end;    
-     
-      -- mav - парсим JSON user_has_medical_card
-      declare
-         l_user_has_medical_card        text;
-      begin
-         l_user_has_medical_card = json_text_i :: json ->> 'user_has_medical_card';
-
-         if coalesce(l_user_has_medical_card,'') = ''
-         then
-            l_mod_vacancy_main.user_has_medical_card = null;
-            l_hint = concat_ws(',', l_hint,'user_has_medical_card');
-         else
-            l_mod_vacancy_main.user_has_medical_card = l_user_has_medical_card;
-         end if;
-      exception
-         when others
-            then
-               return '{"f_result":"' || 'ERROR fn_mobile_get_vacancy_list_with_filter user_has_medical_card : ' || SQLERRM || '"}';
-      end;  
-     
-      -- mav - парсим JSON no_criminal_record
-      declare
-         l_no_criminal_record        text;
-      begin
-         l_no_criminal_record = json_text_i :: json ->> 'no_criminal_record';
-
-         if coalesce(l_no_criminal_record,'') = ''
-         then
-            l_mod_vacancy_main.no_criminal_record = null;
-            l_hint = concat_ws(',', l_hint,'no_criminal_record');
-         else
-            l_mod_vacancy_main.no_criminal_record = l_no_criminal_record;
-         end if;
-      exception
-         when others
-            then
-               return '{"f_result":"' || 'ERROR fn_mobile_get_vacancy_list_with_filter no_criminal_record : ' || SQLERRM || '"}';
-      end;      
-     
-      -- mav - парсим JSON russian_language_level
-      declare
-         l_russian_language_level        text;
-      begin
-         l_russian_language_level = json_text_i :: json ->> 'russian_language_level';
-
-         if coalesce(l_russian_language_level,'') = ''
-         then
-            l_mod_vacancy_main.russian_language_level = null;
-            l_hint = concat_ws(',', l_hint,'russian_language_level');
-         elseif not ((l_russian_language_level)::text = ANY ((ARRAY[
-                                                         'Не знаю'::character varying
-                                                       , 'Говорю'::character varying
-                                                       , 'Читаю'::character varying
-                                                       , 'Пишу'::character varying
-                                                       , 'Говорю, Читаю'::character varying
-                                                       , 'Говорю, Пишу'::character varying
-                                                       , 'Читаю, Пишу'::character varying
-                                                       , 'Говорю, Читаю, Пишу'::character varying
-                                                       ])::text[]))
-         then
-            raise exception 'russian_language_level_check';
-         else
-            l_mod_vacancy_main.russian_language_level = l_russian_language_level;
-         end if;
-
-      exception
-         when others
-            then
-               return '{"f_result":"' || 'ERROR fn_mobile_get_vacancy_list_with_filter russian_language_level : ' || SQLERRM || '"}';
-      end; 
-     
-      -- mav - парсим JSON age
-      declare
-         l_age       text;
-      begin
-         l_age = json_text_i :: json ->> 'age';
-
-         if coalesce(l_age,'') = ''
-         then
-            l_mod_vacancy_main.age_from = null;
-            l_hint = concat_ws(',', l_hint,'age');
-         else
-            l_mod_vacancy_main.age_from = l_age;
-         end if;
-
-      exception
-         when others
-            then
-               return '{"f_result":"' || 'ERROR fn_mobile_get_vacancy_list_with_filter age : ' || SQLERRM || '"}';
-      end; 
-     
-      -- mav - парсим JSON procedure_payment_wages
-      declare
-         l_procedure_payment_wages        text;
-      begin
-         l_procedure_payment_wages = json_text_i :: json ->> 'procedure_payment_wages';
-
-         if coalesce(l_procedure_payment_wages,'') = ''
-         then
-            l_mod_vacancy_main.procedure_payment_wages = null;
-            l_hint = concat_ws(',', l_hint,'procedure_payment_wages');
-         elseif not ((l_procedure_payment_wages)::text = ANY ((ARRAY[
-                                                            'salary_2_times_month'::character varying
-                                                          , 'salary_piecework_payment'::character varying
-                                                          , 'salary_per_week'::character varying
-                                                          ])::text[]))
-         then
-            raise exception 'salary_2_times_month|salary_piecework_payment|salary_per_week';
-         else
-            l_mod_vacancy_main.procedure_payment_wages = l_procedure_payment_wages;
-         end if;
-
-      exception
-         when others
-            then
-               return '{"f_result":"' || 'ERROR fn_mobile_get_vacancy_list_with_filter procedure_payment_wages : ' || SQLERRM || '"}';
-      end; 
-     
-      -- mav - парсим JSON order_payment_advance
-      declare
-         l_order_payment_advance        text;
-      begin
-         l_order_payment_advance = json_text_i :: json ->> 'order_payment_advance';
-
-         if coalesce(l_order_payment_advance,'') = ''
-         then
-            l_mod_vacancy_main.order_payment_advance = null;
-            l_hint = concat_ws(',', l_hint,'order_payment_advance');
-         elseif not ((l_order_payment_advance)::text = ANY ((ARRAY[
-                                                            'period_issue_prepayment'::character varying
-                                                          , 'prepayment_per_day'::character varying
-                                                          , 'prepayment_per_week'::character varying
-                                                          ])::text[]))
-         then
-            raise exception 'period_issue_prepayment|prepayment_per_day|prepayment_per_week';
-         else
-            l_mod_vacancy_main.order_payment_advance = l_order_payment_advance;
-         end if;
-
-      exception
-         when others
-            then
-               return '{"f_result":"' || 'ERROR fn_mobile_get_vacancy_list_with_filter order_payment_advance : ' || SQLERRM || '"}';
-      end; 
-     
-     
-     
 
       --mav - собственно сама обработка
         with login_uuid(
@@ -680,35 +261,12 @@ begin
                                    , m.user_has_medical_card 
                                    , m.no_criminal_record 
                                    , m.additional_requirement                                    
-                                   
                                 from vacancy_id i
                                 join mod_vacancy_main m on i.uuid = m.vacancy_uuid
                                 join ref_mod_vacancy_work_schedule s on s.key = m.work_schedule
                                where 1=1
                                  and (l_position_length = 0
                                       or l_mod_vacancy_main.position = lower(left(m.position, l_position_length))
-                                     )
-                                 and (l_mod_vacancy_main.work_permissions is null
-                                      or l_mod_vacancy_main.work_permissions = m.work_permissions
-                                     )
-                                 and (l_ref_mod_vacancy_work_schedule.vcnc_type is null
-                                      or l_ref_mod_vacancy_work_schedule.vcnc_type = s.vcnc_type
-                                     )
-                                 and (l_mod_vacancy_main.work_schedule is null
-                                      or l_mod_vacancy_main.work_schedule = m.work_schedule
-                                     )
-                                 and (l_mod_vacancy_main.wages_from is null
-                                      or l_mod_vacancy_main.wages_from <= coalesce(m.wages_to, l_mod_vacancy_main.wages_from)
-                                      or m.wages_type = 'rmvt_by_agreement'
-                                     )
-                                 and (l_mod_vacancy_main.wages_type is null
-                                      or l_mod_vacancy_main.wages_type = m.wages_type
-                                     )
-                                 and (l_mod_vacancy_main.accommodations is null
-                                      or l_mod_vacancy_main.accommodations = m.accommodations
-                                     )
-                                 and (l_mod_vacancy_main.nutrition is null
-                                      or l_mod_vacancy_main.nutrition = m.nutrition
                                      )
                             )
            , address(
@@ -810,13 +368,6 @@ begin
                               , ( row_number( ) OVER (order by case when m.timestamp_urgency > now() then 0 else 1 end, m.id_timestamp_update desc ) ) as row_number
                            from vacancy_main m
                            left join mod_address a on a.uuid = m.address_uuid
-                          where 1=1
-                            and (l_mod_address.region is null
-                                 or l_mod_address.region = a.region
-                                )
-                            and (l_mod_address.city is null
-                                 or l_mod_address.city = a.city
-                                )
                        )
            , row_number_beetwin (
                                   uuid
@@ -839,18 +390,18 @@ begin
                                 , wages_to
                                 , accommodations
                                 , nutrition
-                              	, is_legal_employment 
-                              	, work_clothes 
-                              	, procedure_payment_wages 
-                              	, additional_condition 
-                              	, order_payment_advance 
-                              	, gender 
-                              	, age_from 
-                              	, age_to 
-                              	, russian_language_level 
-                              	, user_has_medical_card 
-                              	, no_criminal_record 
-                              	, additional_requirement                                   
+                                , is_legal_employment
+                                , work_clothes
+                                , procedure_payment_wages
+                                , additional_condition
+                                , order_payment_advance
+                                , gender
+                                , age_from
+                                , age_to
+                                , russian_language_level
+                                , user_has_medical_card
+                                , no_criminal_record
+                                , additional_requirement
                                 , coordinates_uuid
                                 , nationality
                                 , work_experience
@@ -947,9 +498,11 @@ begin
                 , nutrition
                 , is_legal_employment 
                 , work_clothes 
-                , procedure_payment_wages 
+                , procedure_payment_wages_key
+                , procedure_payment_wages_value
                 , additional_condition 
-                , order_payment_advance 
+                , order_payment_advance_key
+                , order_payment_advance_value
                 , gender 
                 , age_from 
                 , age_to 
@@ -958,8 +511,10 @@ begin
                 , no_criminal_record 
                 , additional_requirement                  
                 , nationality
-                , work_experience
-                , vcnc_type
+                , work_experience_key
+                , work_experience_value
+                , vcnc_type_key
+                , vcnc_type_value
                 , company_short_name
                 , company_full_address
                 , company_logo_uuid
@@ -991,9 +546,11 @@ begin
                           , b.nutrition                                       ::text
                           , b.is_legal_employment                             ::text
                           , b.work_clothes                                    ::text
-                          , b.procedure_payment_wages                         ::text
+                          , b.procedure_payment_wages                         ::text as procedure_payment_wages_key
+                          , pw.value                                          ::text as procedure_payment_wages_value
                           , b.additional_condition                            ::text
-                          , b.order_payment_advance                           ::text
+                          , b.order_payment_advance                           ::text as order_payment_advance_key
+                          , pa.value                                          ::text as order_payment_advance_value
                           , b.gender                                          ::text
                           , b.age_from                                        ::text
                           , b.age_to                                          ::text
@@ -1002,8 +559,10 @@ begin
                           , b.no_criminal_record                              ::text
                           , b.additional_requirement                          ::text                          
                           , b.nationality                                     ::text
-                          , b.work_experience                                 ::text
-                          , b.vcnc_type                                       ::text
+                          , b.work_experience                                 ::text as work_experience_key
+                          , we.value                                          ::text as work_experience_value
+                          , b.vcnc_type                                       ::text as vcnc_type_key
+                          , vt.value                                          ::text as vcnc_type_value
                           , c.short_name                                      ::text as company_short_name
                           , a.full_address                                    ::text as company_full_address
                           , c.logo                                            ::text as company_logo_uuid
@@ -1031,6 +590,10 @@ begin
                        from row_number_beetwin b
                        join ref_mod_vacancy_work_schedule s on b.work_schedule = s.key
                        join ref_mod_wages_type w on b.wages_type = w.key
+                       join ref_mod_procedure_payment_wages pw on b.procedure_payment_wages = pw.key
+                       join ref_mod_order_payment_advance pa on b.order_payment_advance = pa.key
+                       join ref_mod_work_experience we on b.work_experience = we.key
+                       join ref_mod_vacancy_type vt on b.vcnc_type = vt.key
                        left join mod_login l on b.owner_uuid = l.uuid
                        left join mod_company c on l.company_uuid = c.uuid
                        left join mod_address a on c.address_uuid = a.uuid
@@ -1065,3 +628,5 @@ begin
 end;
 $function$
 ;
+
+
