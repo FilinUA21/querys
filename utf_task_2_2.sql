@@ -521,6 +521,7 @@ begin
                 , work_address
                 , row_number
                 , count_row
+                , vacancy_timestamp_closed
                 )as(
                      select
                             b.owner_uuid                                      ::text
@@ -587,6 +588,7 @@ begin
                           , r.count_reply                                     ::text
                           , v.count_show_all                                  ::text
                           , v.count_show_today                                ::text
+                          , vacancy_timestamp_closed(b.uuid)      ::text
                        from row_number_beetwin b
                        join ref_mod_vacancy_work_schedule s on b.work_schedule = s.key
                        join ref_mod_wages_type w on b.wages_type = w.key
