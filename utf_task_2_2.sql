@@ -597,10 +597,10 @@ begin
                           , v.count_show_today                                ::text
                           , vacancy_timestamp_closed(b.uuid)      ::text
                           , (select array_to_json( array_agg( t4 ) ) as schedules
-                               from (select code      ::text
-                                          , schedule  ::text
-                                          , time_from ::text
-                                          , time_to   ::text
+                               from (select code                              ::text
+                                          , schedule                          ::text
+                                          , left(time_from ::text, 5)         ::text   as time_from
+                                          , left(time_to::text, 5)            ::text   as time_to
                                        from mod_vacancy_timetable
                                       where vacancy_uuid = b.uuid
                                       order by code
