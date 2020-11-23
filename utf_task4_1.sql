@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION public.fn_mod_save_cvs_one_vacancy_timetable (vacancy_uuid_i text, json_text_i text, code_i character varying)
+CREATE OR REPLACE FUNCTION public.fn_mod_save_cvs_one_vacancy_timetable (vacancy_uuid_i text, json_text_i json, code_i character varying)
  RETURNS text
  LANGUAGE plpgsql
  STRICT
@@ -17,47 +17,66 @@ begin
 
       begin
          l_vacancy_uuid = vacancy_uuid_i;
+
+         if not exists(select 1
+                      from mod_vacancy_id
+                     where uuid = l_vacancy_uuid)
+         then
+            raise exception 'not exists for l_vacancy_uuid = %', l_vacancy_uuid;
+         end if;
+
+         select *
+           into l_mod_vacancy_timetable
+           from public.mod_vacancy_timetable
+          where vacancy_uuid = l_vacancy_uuid and code = code_i;
+
+         if l_mod_vacancy_timetable.uuid is null
+         and code_i not in ('001','002','003')
+         then
+            raise exception 'not exists for code_i = %', code_i;
+         end if;
+
+
       exception
          when others
             then
                return '{"f_result":"' || 'ERROR fn_mod_save_cvs_one_vacancy_timetable vacancy_uuid:' || SQLERRM || '"}';
       end;
 
-      if not exists(select 1
-                      from mod_vacancy_id
-                     where uuid = l_vacancy_uuid)
-      then
-         return '{"f_result":"' || 'ERROR fn_mod_save_cvs_one_vacancy_timetable not exists for : ' || l_vacancy_uuid || '"}';
-      end if;
-
-      select *
-        into l_mod_vacancy_timetable
-        from public.mod_vacancy_timetable
-       where vacancy_uuid = l_vacancy_uuid and code = code_i;
-
-      l_mod_vacancy_timetable.vacancy_uuid = coalesce(l_mod_vacancy_timetable.vacancy_uuid, l_vacancy_uuid);
-      l_mod_vacancy_timetable.code = code_i;
+      l_mod_vacancy_timetable.vacancy_uuid = l_vacancy_uuid;
+      l_mod_vacancy_timetable.code         = code_i;
 
       -- mav - парсим JSON schedule
       declare
          l_schedule text;
       begin
-         l_schedule = json_text_i :: json ->> 'schedule';
+         if json_text_i is null
+         then
+            raise exception 'json is not valid';
+         end if;
+
+         l_schedule = json_text_i ->> 'schedule';
         
-         if l_schedule = 'NULL' and code_i <> '001'
+         if length(l_schedule) = 0
+         then
+            raise exception 'null';
+         elsif l_schedule = 'NULL' and code_i <> '001'
          then
             delete from mod_vacancy_timetable
             where vacancy_uuid = l_mod_vacancy_timetable.vacancy_uuid
               and code = code_i;
 
-            select row_to_json(t2)
-              into return_t
-              from (select 'true' as f_result) as t2;
+            return (select row_to_json(t2)
+                      from (select 'true' as f_result) as t2);
 
-           return return_t;
          end if;
 
          l_mod_vacancy_timetable.schedule = coalesce(l_schedule, l_mod_vacancy_timetable.schedule::text);
+
+         if l_mod_vacancy_timetable.schedule is null
+         then
+            raise exception 'null';
+         end if;
 
       exception
          when others
@@ -69,10 +88,19 @@ begin
       declare
          l_time_from text;
       begin
-         l_time_from = json_text_i :: json ->> 'time_from';
+         l_time_from = json_text_i ->> 'time_from';
+
+         if length(l_time_from) = 0
+         then
+            raise exception 'null';
+         end if;
 
          l_mod_vacancy_timetable.time_from = coalesce(l_time_from, l_mod_vacancy_timetable.time_from::text);
 
+         if l_mod_vacancy_timetable.time_from is null
+         then
+            raise exception 'null';
+         end if;
 
       exception
          when others
@@ -84,10 +112,19 @@ begin
       declare
          l_time_to text;
       begin
-         l_time_to = json_text_i :: json ->> 'time_to';
+         l_time_to = json_text_i ->> 'time_to';
+
+         if length(l_time_to) = 0
+         then
+            raise exception 'null';
+         end if;
 
          l_mod_vacancy_timetable.time_to = coalesce(l_time_to, l_mod_vacancy_timetable.time_to::text);
 
+         if l_mod_vacancy_timetable.time_to is null
+         then
+            raise exception 'null';
+         end if;
 
       exception
          when others
@@ -103,36 +140,28 @@ begin
                 , code
                 , schedule
                 , time_from
-                , time_to
-                , timestamp_create)
+                , time_to)
             values (
                  l_mod_vacancy_timetable.vacancy_uuid
                , l_mod_vacancy_timetable.code
                , l_mod_vacancy_timetable.schedule
                , l_mod_vacancy_timetable.time_from
                , l_mod_vacancy_timetable.time_to
-               , now()
             );
       else
          update mod_vacancy_timetable
-            set vacancy_uuid                 = l_mod_vacancy_timetable.vacancy_uuid
-              , code                         = l_mod_vacancy_timetable.code
-              , schedule                     = l_mod_vacancy_timetable.schedule
+            set schedule                     = l_mod_vacancy_timetable.schedule
               , time_from                    = l_mod_vacancy_timetable.time_from
               , time_to                      = l_mod_vacancy_timetable.time_to
               , timestamp_update             = now()
           where vacancy_uuid = l_vacancy_uuid and code = code_i
-            and (
-                    code
-                  , schedule
-                  , time_from
-                  , time_to)
+            and ( schedule
+                , time_from
+                , time_to)
                 is distinct from
-                ( l_mod_vacancy_timetable.code
-                , l_mod_vacancy_timetable.schedule
+                ( l_mod_vacancy_timetable.schedule
                 , l_mod_vacancy_timetable.time_from
-                , l_mod_vacancy_timetable.time_to
-               );
+                , l_mod_vacancy_timetable.time_to);
       end if;
 
       select row_to_json(t2)
@@ -151,3 +180,15 @@ begin
 end;
 $function$
 ;
+
+
+select fn_mod_save_cvs_one_vacancy_timetable('6ba2817e-be50-41d6-b17b-3500cdab64f8',
+'
+{"schedule":"7/0",
+ "time_from":"06:00",
+ "time_to":"23:01"
+}'::json, '001');
+
+select *
+  from mod_vacancy_timetable
+ order by timestamp_update;
