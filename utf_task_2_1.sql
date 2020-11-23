@@ -1,3 +1,5 @@
+select fn_gid_get_cvs_expected_job()
+
 CREATE OR REPLACE FUNCTION public.mod_update_vacancy_main(t_personal_uuid text, t_json_text text)
  RETURNS text
  LANGUAGE plpgsql

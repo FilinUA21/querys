@@ -1,16 +1,24 @@
-﻿
-CREATE TABLE public.mod_vacancy_timetable (
-	uuid uuid NOT NULL DEFAULT gen_random_uuid(),
-	vacancy_uuid uuid NOT NULL,	
-	code varchar(3) NOT NULL,	
-	timestamp_create timestamp NULL DEFAULT now(),
-	timestamp_update timestamp NULL,
+﻿-- auto-generated definition
+create table mod_vacancy_timetable
+(
+	uuid uuid default gen_random_uuid() not null
+		constraint mod_vacancy_timetable_pk
+			primary key,
+	vacancy_uuid uuid not null
+		constraint mod_vacancy_timetable_vacancy_uuid_fkey
+			references mod_vacancy_id
+				on update cascade on delete cascade,
+	code varchar(3) not null,
+	timestamp_create timestamp default now(),
+	timestamp_update timestamp,
 	schedule varchar(3),
 	time_from time,
-	time_to time,
-	
-	CONSTRAINT mod_vacancy_timetable_pk PRIMARY KEY (uuid),
-	CONSTRAINT mod_vacancy_timetable_vacancy_uuid_fkey FOREIGN KEY (vacancy_uuid) REFERENCES mod_vacancy_id(uuid) ON UPDATE CASCADE ON DELETE CASCADE
+	time_to time
 );
 
-COMMENT ON COLUMN mod_vacancy_timetable.code IS 'Номер элемента массива в списке';
+comment on column mod_vacancy_timetable.code is 'Номер элемента массива в списке';
+
+alter table mod_vacancy_timetable owner to developer;
+
+create unique index mod_vacancy_timetable_all_to_uindex
+	on mod_vacancy_timetable (vacancy_uuid, schedule, time_from, time_to);

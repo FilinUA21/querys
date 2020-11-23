@@ -526,6 +526,7 @@ begin
                 , count_show_all
                 , count_show_today
                 , vacancy_timestamp_closed
+                , schedules
                 )as(
                      select
                             b.owner_uuid                                      ::text
@@ -595,6 +596,15 @@ begin
                           , v.count_show_all                                  ::text
                           , v.count_show_today                                ::text
                           , vacancy_timestamp_closed(b.uuid)      ::text
+                          , (select array_to_json( array_agg( t4 ) ) as schedules
+                               from (select code      ::text
+                                          , schedule  ::text
+                                          , time_from ::text
+                                          , time_to   ::text
+                                       from mod_vacancy_timetable
+                                      where vacancy_uuid = b.uuid
+                                      order by code
+                                    ) t4)
                        from row_number_beetwin b
                        join ref_mod_vacancy_work_schedule s on b.work_schedule = s.key
                        join ref_mod_wages_type w on b.wages_type = w.key

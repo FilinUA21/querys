@@ -15,11 +15,10 @@ begin
       f_result          text;
       l_second_is_empty boolean;
       l_hint            text;
-      vacancy_id_v             varchar(63); --mav - id вакансии в оригинальном формате
-      vacancy_id_t             text; --mav - id вакансии в текстовом формате     
-      min_lenght_id            int = -1;
-      max_lenght_id            int = -1;     
-      vacancy_uuid_u           uuid; --mav - находим uuid вакансии
+      vacancy_id_t      text; --mav - id вакансии в текстовом формате
+      min_lenght_id     int = -1;
+      max_lenght_id     int = -1;
+      vacancy_uuid_u    uuid; --mav - находим uuid вакансии
    begin
 
       --mav - парсим json
@@ -38,7 +37,21 @@ begin
            from mod_vacancy_id
           where id = vacancy_id_t;
       end if;
-	   
+
+      if length( vacancy_id_t ) < min_lenght_id or
+         length( vacancy_id_t ) > max_lenght_id and vacancy_id_t not like 'error%'
+      then
+         vacancy_id_t = 'error vacancy_id.length';
+      elseif vacancy_uuid_u is null and vacancy_id_t not like 'error%'
+      then
+         vacancy_id_t = 'error vacancy_id.not_found';
+      end if;
+
+      if vacancy_id_t like 'error%'
+      then
+         return '{"f_result":"' || 'error mod_update_vacancy_main:' || vacancy_id_t || '"}';
+      end if;
+
       -- mav - парсим JSON для первой вакансии
       declare
          l_001 text;
@@ -55,7 +68,7 @@ begin
             raise exception 'null';
          end if;
 
-         f_result = fn_mod_save_cvs_one_vacancy_timetable( vacancy_uuid_u, l_001, '001');
+         f_result = fn_mod_save_cvs_one_vacancy_timetable( vacancy_uuid_u::text, l_001::json, '001');
 
       exception
          when others
@@ -82,7 +95,7 @@ begin
 
          if l_002 is not null
          then
-            f_result = fn_mod_save_cvs_one_vacancy_timetable( vacancy_uuid_u, l_002, '002');
+            f_result = fn_mod_save_cvs_one_vacancy_timetable( vacancy_uuid_u::text, l_002::json, '002');
          else
             l_second_is_empty = true;
             l_hint = concat_ws(',', l_hint, '002','003');
@@ -124,7 +137,7 @@ begin
 
          if l_003 is not null
          then
-            f_result = fn_mod_save_cvs_one_vacancy_timetable( vacancy_uuid_u, l_003, '003');
+            f_result = fn_mod_save_cvs_one_vacancy_timetable( vacancy_uuid_u::text, l_003::json, '003');
          else
             l_hint = concat_ws(',', l_hint,'003');
          end if;
@@ -160,3 +173,58 @@ begin
 end;
 $function$
 ;
+
+select fn_gid_save_cvs_all_vacancy_timetable('','{
+  "vacancy_id":"ID1911200006008001",
+  "001":{
+    "schedule":"7/0"
+  , "time_from":"06:00"
+  , "time_to":"23:00"
+  }
+,
+  "002":{
+    "schedule":"5/2"
+  , "time_from":"06:00"
+  , "time_to":"23:00"
+
+  }
+,
+  "003":{
+    "schedule":"3/2"
+  , "time_from":"06:00"
+  , "time_to":"23:00"
+  }
+}
+'::json::text);
+
+
+select fn_gid_save_cvs_all_vacancy_timetable('','{
+  "vacancy_id":"ID1911200006008001",
+  "001":{
+    "schedule":"7/0"
+  , "time_from":"06:00"
+  , "time_to":"23:00"
+  }
+,
+  "002":{
+    "schedule":"NULL"
+  , "time_from":"06:00"
+  , "time_to":"23:00"
+
+  }
+,
+  "003":{
+    "schedule":"NULL"
+  , "time_from":"06:00"
+  , "time_to":"23:00"
+  }
+}
+'::json::text);
+
+
+select *
+  from mod_vacancy_id
+
+select *
+  from mod_vacancy_timetable
+ order by timestamp_update;

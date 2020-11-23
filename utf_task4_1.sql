@@ -186,8 +186,8 @@ select fn_mod_save_cvs_one_vacancy_timetable('6ba2817e-be50-41d6-b17b-3500cdab64
 '
 {"schedule":"7/0",
  "time_from":"06:00",
- "time_to":"23:01"
-}'::json, '001');
+ "time_to":"23:00"
+}'::json, '002');
 
 select *
   from mod_vacancy_timetable
