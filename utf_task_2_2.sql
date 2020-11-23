@@ -521,6 +521,10 @@ begin
                 , work_address
                 , row_number
                 , count_row
+                , coordinates
+                , count_reply
+                , count_show_all
+                , count_show_today
                 , vacancy_timestamp_closed
                 )as(
                      select
@@ -582,8 +586,10 @@ begin
                           , b.row_number                                      ::text
                           , b.count_row                                       ::text
                           , json_build_object(
-                                'latitude'            , to_char(m.latitude, 'FM999.999999')
-                              , 'longitude'           , to_char(m.longitude, 'FM999.999999')
+                                'latitude'   , to_char( m.latitude
+                                                      , 'FM999.999999')       ::text
+                              , 'longitude'  , to_char( m.longitude
+                                                      , 'FM999.999999')       ::text
                               ) as coordinates
                           , r.count_reply                                     ::text
                           , v.count_show_all                                  ::text
@@ -632,3 +638,4 @@ $function$
 ;
 
 
+select to_char('1.4'::double precision, 'FM999.999999')::text ;
